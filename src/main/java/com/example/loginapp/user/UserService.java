@@ -13,8 +13,7 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private RestTemplate restTemplate;
-    private KakaoToken kakaoToken;
+    private final KakaoToken kakaoToken;
 
     @Transactional
     public void 회원가입(String username, String password, String email) {
@@ -40,6 +39,8 @@ public class UserService {
     }
 
     public User 카카오로그인(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+
         KakaoResponse.TokenDTO kakaoResponse = kakaoToken.getKakaoToken(code, restTemplate);
         KakaoResponse.KakaoUserDTO kakaoUser = kakaoToken.getKakaoUser(kakaoResponse.getAccessToken(), restTemplate);
 

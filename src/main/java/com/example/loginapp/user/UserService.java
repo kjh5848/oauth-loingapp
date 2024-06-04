@@ -1,6 +1,7 @@
 package com.example.loginapp.user;
 
 import com.example.loginapp.core.util.KakaoToken;
+import com.example.loginapp.core.util.NaverToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository userRepository;
     private final KakaoToken kakaoToken;
+    private final NaverToken naverToken;
 
     @Transactional
     public void 회원가입(String username, String password, String email) {
@@ -57,6 +59,31 @@ public class UserService {
                     .password(UUID.randomUUID().toString())
                     .email(kakaoUser.getProperties().getNickname() + "@nate.com")
                     .provider("kakao")
+                    .build();
+            return userRepository.save(user);
+        }
+    }
+
+    public User 네이버로그인(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        NaverResponse.TokenDTO naverResponse = naverToken.getNaverToken(code, restTemplate);
+        NaverResponse.NaverUserDTO naverUser = naverToken.getNaveUser(naverResponse.getAccessToken(), restTemplate);
+
+        String username = "naver_" + naverUser.getResponse().getId();
+
+        User userPS = userRepository.findByUsername(username);
+
+        if (userPS != null) {
+            System.out.println("어? 유저가 있네? 강제로그인 진행");
+            return userPS;
+        } else {
+            System.out.println("어? 유저가 없네? 강제회원가입 and 강제로그인 진행");
+            User user = User.builder()
+                    .username(username)
+                    .password(UUID.randomUUID().toString())
+                    .email(naverUser.getResponse().getId() + "@nate.com")
+                    .provider("naver")
                     .build();
             return userRepository.save(user);
         }
